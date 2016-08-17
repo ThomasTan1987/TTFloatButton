@@ -18,9 +18,13 @@ static TTFloatButton *floatButton = nil;
     static dispatch_once_t onceToken;
     dispatch_once(&onceToken, ^{
         floatButton = [[TTFloatButton alloc] initWithFrame:CGRectMake(0, 0, 50, 50)];
-        floatButton.backgroundColor = [UIColor grayColor];
+        
+        floatButton.backgroundColor = [UIColor blackColor];
+        floatButton.alpha = 0.8;
         floatButton.floatButtonTaped = floatButtonTaped;
         floatButton.layer.cornerRadius = 5;
+        floatButton.layer.borderWidth = 1;
+        floatButton.layer.borderColor = [UIColor whiteColor].CGColor;
         floatButton.windowLevel = UIWindowLevelAlert + 1;
         floatButton.hidden = NO;
         floatButton.rootViewController = [[UIViewController alloc] init];
@@ -42,20 +46,24 @@ static TTFloatButton *floatButton = nil;
             break;
         }
         case UIGestureRecognizerStateChanged: {
-            
-            CGPoint offset = [pan translationInView:[UIApplication sharedApplication].keyWindow];
-            
-            //通过计算偏移量来设定新坐标
-            [self setCenter:CGPointMake(self.center.x + offset.x, self.center.y + offset.y)];
-            //初始化sender中的坐标位置。如果不初始化，移动坐标会一直积累起来。
-            [pan setTranslation:CGPointMake(0, 0) inView:[UIApplication sharedApplication].keyWindow];
+            [self setCenter:[pan locationInView:[UIApplication sharedApplication].keyWindow]];
             break;
         }
         case UIGestureRecognizerStateEnded:
         case UIGestureRecognizerStateCancelled:
         case UIGestureRecognizerStateFailed: {
-//            CGPoint currentPoint = [pan translationInView:[UIApplication sharedApplication].keyWindow];
-//            self.center = currentPoint;
+            CGPoint currentPoint = [pan locationInView:[UIApplication sharedApplication].keyWindow];
+            NSInteger right = [UIApplication sharedApplication].keyWindow.frame.size.width - currentPoint.x;
+
+            [UIView animateWithDuration:0.5 animations:^{
+                CGPoint newPoint;
+                if (currentPoint.x < right) {
+                    newPoint = CGPointMake(self.frame.size.width/2, currentPoint.y);
+                }else{
+                    newPoint = CGPointMake([UIApplication sharedApplication].keyWindow.frame.size.width - self.frame.size.width/2, currentPoint.y);
+                }
+                [self setCenter:newPoint];
+            }];
             break;
         }
         default:
